@@ -1,8 +1,15 @@
-import { Schema, model } from "mongoose";
+import { Request } from "express";
+import { Schema, Types, model } from "mongoose";
 
 export interface ICentre {
+  _id: Types.ObjectId;
   centreId: string;
   password: string;
+  role: string;
+}
+
+export interface AuthenticatedCentre extends Request {
+  centre?: ICentre;
 }
 
 const schema = new Schema<ICentre>({
@@ -10,6 +17,6 @@ const schema = new Schema<ICentre>({
   password: { type: String, required: true, lowercase: true },
 });
 
-const AdminModel = model<ICentre>("Centre", schema);
+const CentreModel = model<ICentre>("Centre", schema);
 
-export default AdminModel;
+export default CentreModel;
