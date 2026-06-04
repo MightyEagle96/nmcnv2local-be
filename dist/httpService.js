@@ -1,7 +1,7 @@
 import axios from "axios";
 const centralServerRoute = {
-    dev: "http://192.168.16.92:4000/api/v1/",
-    prod: "https://policymeeting.jamb.gov.ng/api/v1/",
+    dev: "http://192.168.16.92:4000/api/",
+    prod: "https://policymeeting.jamb.gov.ng/api/",
 };
 const route = process.env.NODE_ENV === "development"
     ? centralServerRoute.dev
@@ -26,7 +26,7 @@ httpService.interceptors.response.use((response) => {
     if (error.response) {
         return { data: error.response.data, status: error.response.status };
     }
-    return { data: "Cannot connect at this time", status: 500 };
+    return { data: "Cannot establish connection", status: 500 };
 });
 export { httpService };
 //# sourceMappingURL=httpService.js.map
