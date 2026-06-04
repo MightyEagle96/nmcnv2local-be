@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import Centre from "../models/centreModel.js";
 export const myProfile = async (req, res) => {
     if (req.centre) {
+        console.log(req.centre);
         res.send(req.centre);
         return;
     }
@@ -24,13 +25,11 @@ export const getRefreshToken = async (req, res) => {
                 return res.status(401).send("Not authenticated");
             }
             const accessToken = generateToken({
-                centreId: adminAccount.centreId,
-                password: adminAccount.password,
+                ...adminAccount,
                 role: "admin",
             });
             const newRefreshToken = generateRefreshToken({
-                centreId: adminAccount.centreId,
-                password: adminAccount.password,
+                ...adminAccount,
                 role: "admin",
             });
             res

@@ -5,6 +5,7 @@ const schema = new Schema({
         default: "CENTRE",
         unique: true,
     },
+    role: { type: String, default: "admin" },
     centreId: { type: String, required: true },
     password: { type: String, required: true },
 });

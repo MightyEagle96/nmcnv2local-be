@@ -1,7 +1,10 @@
 import { Router } from "express";
-import { myProfile } from "../controllers/authController.js";
+import { getRefreshToken, myProfile } from "../controllers/authController.js";
+import { authenticateToken } from "../controllers/jwtController.js";
 
 const authRouter = Router();
 
-authRouter.get("/profile", myProfile);
+authRouter
+  .get("/profile", authenticateToken, myProfile)
+  .get("/refresh", getRefreshToken);
 export default authRouter;

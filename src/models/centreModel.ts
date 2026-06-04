@@ -6,6 +6,7 @@ export interface ICentre {
   centreId: string;
   password: string;
   active: boolean;
+  role: string;
 }
 
 export interface AuthenticatedCentre extends Request {
@@ -17,7 +18,7 @@ const schema = new Schema<ICentre>({
     default: "CENTRE",
     unique: true,
   },
-
+  role: { type: String, default: "admin" },
   centreId: { type: String, required: true },
   password: { type: String, required: true },
 });

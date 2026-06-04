@@ -12,6 +12,7 @@ import Centre from "../models/centreModel.js";
 
 export const myProfile = async (req: JointInterface, res: Response) => {
   if (req.centre) {
+    console.log(req.centre);
     res.send(req.centre);
     return;
   }
@@ -43,14 +44,12 @@ export const getRefreshToken = async (req: JointInterface, res: Response) => {
       }
 
       const accessToken = generateToken({
-        centreId: adminAccount.centreId,
-        password: adminAccount.password,
+        ...adminAccount,
         role: "admin",
       });
 
       const newRefreshToken = generateRefreshToken({
-        centreId: adminAccount.centreId,
-        password: adminAccount.password,
+        ...adminAccount,
         role: "admin",
       });
 

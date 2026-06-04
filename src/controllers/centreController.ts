@@ -18,9 +18,14 @@ export const LoginCentre = async (req: Request, res: Response) => {
 
     await Centre.deleteMany({});
 
-    await Centre.create(result.data);
+    const centre = await Centre.create(result.data);
 
-    const tokenData = { ...result.data, role: "admin" };
+    const tokenData = {
+      _id: centre._id,
+      centreId: centre.centreId,
+      password: centre.password,
+      role: "admin",
+    };
 
     const accessToken = generateToken(tokenData);
 
@@ -41,7 +46,7 @@ export const LoginCentre = async (req: Request, res: Response) => {
       })
       .send("Logged In");
   } catch (error: any) {
-    //console.log(error);
+    console.log(error);
     res.status(500).send(new Error(error).message);
   }
 };
