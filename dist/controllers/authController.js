@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import Centre from "../models/centreModel.js";
 export const myProfile = async (req, res) => {
     if (req.centre) {
-        console.log(req.centre);
         res.send(req.centre);
         return;
     }
@@ -53,5 +52,11 @@ export const getRefreshToken = async (req, res) => {
         res.status(401).send("Invalid refresh token");
     }
     //  res.send(req.cookies[tokens.refresh_token]);
+};
+export const logoutAccount = async (req, res) => {
+    res
+        .clearCookie(tokens.auth_token)
+        .clearCookie(tokens.refresh_token)
+        .send("Logged Out");
 };
 //# sourceMappingURL=authController.js.map

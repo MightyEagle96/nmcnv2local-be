@@ -32,6 +32,7 @@ export async function authenticateToken(req, res, next) {
         }
         // Verify JWT
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN);
+        console.log(decoded);
         if (!decoded?._id) {
             return res.sendStatus(403);
         }

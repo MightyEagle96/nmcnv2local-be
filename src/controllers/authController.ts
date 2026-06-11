@@ -12,7 +12,6 @@ import Centre from "../models/centreModel.js";
 
 export const myProfile = async (req: JointInterface, res: Response) => {
   if (req.centre) {
-    console.log(req.centre);
     res.send(req.centre);
     return;
   }
@@ -74,4 +73,11 @@ export const getRefreshToken = async (req: JointInterface, res: Response) => {
     res.status(401).send("Invalid refresh token");
   }
   //  res.send(req.cookies[tokens.refresh_token]);
+};
+
+export const logoutAccount = async (req: JointInterface, res: Response) => {
+  res
+    .clearCookie(tokens.auth_token)
+    .clearCookie(tokens.refresh_token)
+    .send("Logged Out");
 };

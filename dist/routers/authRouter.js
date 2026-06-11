@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { getRefreshToken, myProfile } from "../controllers/authController.js";
+import { getRefreshToken, myProfile, logoutAccount, } from "../controllers/authController.js";
 import { authenticateToken } from "../controllers/jwtController.js";
 const authRouter = Router();
 authRouter
     .get("/profile", authenticateToken, myProfile)
-    .get("/refresh", getRefreshToken);
+    .get("/refresh", getRefreshToken)
+    .get("/logout", logoutAccount);
 export default authRouter;
 //# sourceMappingURL=authRouter.js.map

@@ -57,6 +57,7 @@ export async function authenticateToken(
       process.env.ACCESS_TOKEN as string,
     ) as JwtPayload & IPayload;
 
+    console.log(decoded);
     if (!decoded?._id) {
       return res.sendStatus(403);
     }

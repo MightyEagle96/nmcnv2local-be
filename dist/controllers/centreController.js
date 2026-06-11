@@ -8,12 +8,12 @@ export const LoginCentre = async (req, res) => {
         if (result.status !== 200) {
             return res.status(result.status).send(result.data);
         }
-        await Centre.deleteMany({});
-        const centre = await Centre.create(result.data);
+        await Centre.updateMany({ active: true }, { $set: { active: false } });
+        await Centre.updateOne({ _id: result.data._id }, { $set: { ...result.data, active: true } }, { upsert: true });
         const tokenData = {
-            _id: centre._id,
-            centreId: centre.centreId,
-            password: centre.password,
+            _id: result.data._id,
+            centreId: result.data.centreId,
+            password: result.data.password,
             role: "admin",
         };
         const accessToken = generateToken(tokenData);
@@ -23,7 +23,7 @@ export const LoginCentre = async (req, res) => {
             httpOnly: true,
             secure: isProduction, // 🔥 key fix
             sameSite: isProduction ? "none" : "lax",
-            maxAge: 1000 * 60 * 60,
+            maxAge: 1000 * 60 * 60 * 24,
         })
             .cookie(tokens.refresh_token, refreshToken, {
             httpOnly: true,
