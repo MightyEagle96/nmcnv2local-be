@@ -2,6 +2,7 @@ import { Request } from "express";
 import { Schema, model } from "mongoose";
 
 export interface ICentre {
+  _id?: string;
   centreId: string;
   password: string;
   active: boolean;

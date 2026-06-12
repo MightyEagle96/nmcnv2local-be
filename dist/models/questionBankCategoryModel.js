@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 const schema = new Schema({
     programme: { type: Schema.Types.ObjectId, ref: "Programme" },
+    questionBankCategory: { type: Number },
+    questionBank: { type: Schema.Types.ObjectId, ref: "QuestionBank" },
     isTaken: { type: Boolean, default: false },
     dateCreated: { type: Date },
     dateTaken: Date,
@@ -17,5 +19,5 @@ const schema = new Schema({
         },
     ],
 }, { timestamps: true });
-export default model("QuestionBank", schema);
-//# sourceMappingURL=questionBankModel.js.map
+export default model("QuestionBankCategory", schema);
+//# sourceMappingURL=questionBankCategoryModel.js.map

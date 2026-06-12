@@ -6,6 +6,7 @@ interface IExamSession {
   sessionCode: string;
   sessionNumber: number;
   status: string;
+  centre: Types.ObjectId;
 }
 
 const schema = new Schema<IExamSession>(
@@ -15,6 +16,7 @@ const schema = new Schema<IExamSession>(
     sessionCode: { type: String, lowercase: true },
     sessionNumber: { type: Number },
     status: { type: String },
+    centre: { type: Schema.Types.ObjectId, ref: "Centre" },
   },
   { timestamps: true },
 );

@@ -1,30 +1,13 @@
 import mongoose, { Types } from "mongoose";
+import { IQuestion, IQuestionBank } from "./questionBankModel.js";
 
 const { Schema, model } = mongoose;
-
-export interface IQuestion {
-  question: string;
-  questionId: string;
-  options: [string];
-  correctAnswer: string;
-  startGroup: boolean;
-  clustered: boolean;
-  endGroup: boolean;
-}
-
-export interface IQuestionBank {
-  programme: Types.ObjectId;
-  isTaken: boolean;
-  dateCreated: Date;
-  questions: [IQuestion];
-  dateTaken: Date;
-  questionBankCategory?: number;
-  questionBank?: Types.ObjectId;
-}
 
 const schema = new Schema<IQuestionBank>(
   {
     programme: { type: Schema.Types.ObjectId, ref: "Programme" },
+    questionBankCategory: { type: Number },
+    questionBank: { type: Schema.Types.ObjectId, ref: "QuestionBank" },
     isTaken: { type: Boolean, default: false },
     dateCreated: { type: Date },
     dateTaken: Date,
@@ -43,4 +26,4 @@ const schema = new Schema<IQuestionBank>(
   { timestamps: true },
 );
 
-export default model("QuestionBank", schema);
+export default model("QuestionBankCategory", schema);

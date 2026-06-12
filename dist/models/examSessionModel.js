@@ -5,6 +5,7 @@ const schema = new Schema({
     sessionCode: { type: String, lowercase: true },
     sessionNumber: { type: Number },
     status: { type: String },
+    centre: { type: Schema.Types.ObjectId, ref: "Centre" },
 }, { timestamps: true });
 const ExamSessionModel = model("ExamSession", schema);
 export default ExamSessionModel;
