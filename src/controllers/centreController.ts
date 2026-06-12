@@ -6,6 +6,8 @@ import {
   generateToken,
   tokens,
 } from "./jwtController.js";
+import CBTExamModel from "../models/cbtExaminationModel.js";
+import Candidate from "../models/candidateModel.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 export const LoginCentre = async (req: Request, res: Response) => {
@@ -53,4 +55,18 @@ export const LoginCentre = async (req: Request, res: Response) => {
     console.log(error);
     res.status(500).send(new Error(error).message);
   }
+};
+
+const appDashboard = async (req: Request, res: Response) => {
+  const centre = await Centre.findOne({ active: true }).lean();
+
+  if (!centre) {
+    return res.sendStatus(401);
+  }
+
+  const [] = await Promise.all([
+    CBTExamModel.countDocuments({ centre: centre._id }),
+    Candidate.countDocuments({ centre: centre._id }),
+    //ExamSession
+  ]);
 };

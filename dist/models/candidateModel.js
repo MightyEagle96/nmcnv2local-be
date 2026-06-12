@@ -1,6 +1,4 @@
 import { Schema, model } from "mongoose";
-import CentreModel from "../servers/centreModel.js";
-import ProgrammeModel from "./programmeModel.js";
 const schema = new Schema({
     firstName: { type: String, lowercase: true, default: "" },
     middleName: { type: String, lowercase: true, default: "" },
@@ -25,22 +23,6 @@ const schema = new Schema({
     sessionId: { type: Number, default: 0 },
 }, { timestamps: true });
 schema.index({ indexNumber: 1, cbtExamination: 1, examSession: 1 }, { unique: true });
-schema.pre("save", async function (next) {
-    if (this.programmeCodes) {
-        const programmeCodes = this.programmeCodes.split(",");
-        const [centre, programmeData] = await Promise.all([
-            CentreModel.findOne({ centreId: this.centreId }),
-            ProgrammeModel.find({
-                code: programmeCodes.map((str) => str.trim()),
-            }),
-        ]);
-        if (centre)
-            this.centre = centre._id;
-        if (programmeData.length > 0)
-            this.programmes = programmeData.map((c) => c._id);
-    }
-    next();
-});
 const Candidate = model("Candidate", schema);
 export default Candidate;
 //# sourceMappingURL=candidateModel.js.map

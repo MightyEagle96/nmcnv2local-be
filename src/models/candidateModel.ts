@@ -1,6 +1,5 @@
 import mongoose, { Schema, Types, model } from "mongoose";
-import bcrypt from "bcryptjs";
-import CentreModel from "../servers/centreModel.js";
+
 import ProgrammeModel from "./programmeModel.js";
 
 export interface ICandidate {
@@ -60,25 +59,6 @@ schema.index(
   { unique: true },
 );
 
-schema.pre("save", async function (next) {
-  if (this.programmeCodes) {
-    const programmeCodes = this.programmeCodes.split(",");
-
-    const [centre, programmeData] = await Promise.all([
-      CentreModel.findOne({ centreId: this.centreId }),
-      ProgrammeModel.find({
-        code: programmeCodes.map((str) => str.trim()),
-      }),
-    ]);
-
-    if (centre) this.centre = centre._id;
-
-    if (programmeData.length > 0)
-      this.programmes = programmeData.map((c) => c._id);
-  }
-
-  next();
-});
 const Candidate = model("Candidate", schema);
 
 export default Candidate;
