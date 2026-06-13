@@ -5,7 +5,7 @@ const { Schema, model } = mongoose;
 export interface IQuestion {
   question: string;
   questionId: string;
-  options: [string];
+  options: string[];
   correctAnswer: string;
   startGroup: boolean;
   clustered: boolean;
@@ -16,7 +16,7 @@ export interface IQuestionBank {
   programme: Types.ObjectId;
   isTaken: boolean;
   dateCreated: Date;
-  questions: [IQuestion];
+  questions: IQuestion[];
   dateTaken: Date;
   questionBankCategory?: number;
   questionBank?: Types.ObjectId;
@@ -42,5 +42,7 @@ const schema = new Schema<IQuestionBank>(
   },
   { timestamps: true },
 );
+//export default model("QuestionBank", schema);
 
-export default model("QuestionBank", schema);
+const QuestionBankModel = model<IQuestionBank>("QuestionBank", schema);
+export default QuestionBankModel;

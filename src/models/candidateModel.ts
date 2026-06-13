@@ -26,6 +26,7 @@ export interface ICandidate {
   duration?: number;
   sessionId: number;
   invalidProgrammeIds: Types.ObjectId[];
+  questionCategory: number;
 }
 
 const schema = new Schema<ICandidate>(

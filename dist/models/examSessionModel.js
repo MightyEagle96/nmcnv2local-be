@@ -7,6 +7,7 @@ const schema = new Schema({
     status: { type: String },
     centre: { type: Schema.Types.ObjectId, ref: "Centre" },
 }, { timestamps: true });
+schema.index({ cbtExamination: 1, sessionNumber: 1 }, { unique: true });
 const ExamSessionModel = model("ExamSession", schema);
 export default ExamSessionModel;
 //# sourceMappingURL=examSessionModel.js.map

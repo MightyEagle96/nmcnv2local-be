@@ -1,4 +1,6 @@
 import { IQuestionBank } from "../models/questionBankModel.js";
+import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
+import QuestionBankModel from "../models/questionBankModel.js";
 
 function shuffle<T>(array: T[]): T[] {
   const result = [...array];
@@ -26,6 +28,27 @@ export const randomizeQuestionBank = (
     programme: questionBank.programme,
     isTaken: false,
     dateCreated: new Date(),
-    // questions: randomizedQuestions,
+    questions: randomizedQuestions || [],
   };
+};
+
+export const generateCategories = async (questionBank: IQuestionBank) => {
+  // Create the master question bank first
+  const rootQuestionBank = await QuestionBankModel.create(questionBank);
+
+  const categories = [];
+
+  for (let i = 1; i <= 10; i++) {
+    const randomized = randomizeQuestionBank(questionBank);
+
+    categories.push({
+      ...randomized,
+      questionBank: rootQuestionBank._id,
+      questionBankCategory: i,
+    });
+  }
+
+  await QuestionBankCategoryModel.insertMany(categories);
+
+  return rootQuestionBank;
 };

@@ -26,4 +26,10 @@ const schema = new Schema<IQuestionBank>(
   { timestamps: true },
 );
 
-export default model("QuestionBankCategory", schema);
+//export default model("QuestionBankCategory", schema);
+
+const QuestionBankCategoryModel = model<IQuestionBank>(
+  "QuestionBankCategory",
+  schema,
+);
+export default QuestionBankCategoryModel;

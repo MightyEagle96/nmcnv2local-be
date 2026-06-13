@@ -21,6 +21,8 @@ const schema = new Schema<IExamSession>(
   { timestamps: true },
 );
 
+schema.index({ cbtExamination: 1, sessionNumber: 1 }, { unique: true });
+
 const ExamSessionModel = model("ExamSession", schema);
 
 export default ExamSessionModel;

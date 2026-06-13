@@ -5,7 +5,13 @@ import ExamCentreModel from "../models/examCentreModel.js";
 import { httpService } from "../httpService.js";
 import CBTExamModel from "../models/cbtExaminationModel.js";
 import ProgrammeModel from "../models/programmeModel.js";
-import questionBankModel from "../models/questionBankModel.js";
+import {
+  generateCategories,
+  randomizeQuestionBank,
+} from "./examRandomization.js";
+import QuestionBankModel from "../models/questionBankModel.js";
+import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
+import Candidate from "../models/candidateModel.js";
 
 export const authenticateCentre = async (
   req: Request,
@@ -29,26 +35,6 @@ export const authenticateCentre = async (
   }
 };
 
-// export const downloadExamSessions = async (req: Request, res: Response) => {
-//   await Promise.all([
-//     ExamSessionModel.deleteMany(),
-//     ExamCentreModel.deleteMany(),
-//   ]);
-
-//   const response = await httpService.get("download/sessions", {
-//     headers: { centreid: req.headers.centreid },
-//   });
-
-//   if (response.status === 200) {
-//     const { sessions, examCentre } = response.data;
-//     await ExamSessionModel.insertMany(sessions);
-
-//     await ExamCentreModel.create(examCentre);
-//   }
-
-//   res.send("Examination sessions downloaded");
-// };
-
 export const downloadExamination = async (req: Request, res: Response) => {
   try {
     const response = await httpService.get("server/download/examination", {
@@ -60,6 +46,10 @@ export const downloadExamination = async (req: Request, res: Response) => {
     }
 
     const { _id, ...rest } = response.data;
+    await CBTExamModel.updateMany(
+      { active: true },
+      { $set: { active: false } },
+    );
 
     await CBTExamModel.updateOne(
       { _id },
@@ -68,8 +58,6 @@ export const downloadExamination = async (req: Request, res: Response) => {
         upsert: true,
       },
     );
-
-    console.log(response.data);
 
     res.send("Examination downloaded");
   } catch (error) {
@@ -111,33 +99,110 @@ export const downloadQuestionBanks = async (req: Request, res: Response) => {
       return res.status(response.status).send(response.data);
     }
 
-    const questionBanks = response.data;
+    const downloadedQuestionBanks = response.data;
 
-    await questionBankModel.deleteMany({});
+    await QuestionBankModel.deleteMany({});
+    await QuestionBankCategoryModel.deleteMany({});
 
-    await ProgrammeModel.insertMany(questionBanks, { ordered: false });
+    for (const questionBank of downloadedQuestionBanks) {
+      const rootQuestionBank = await QuestionBankModel.create(questionBank);
 
-    // const programmes = response.data;
+      const categories = Array.from({ length: 10 }, (_, index) => ({
+        ...randomizeQuestionBank(questionBank),
+        questionBank: rootQuestionBank._id,
+        questionBankCategory: index + 1,
+      }));
 
-    // await ProgrammeModel.deleteMany({});
+      await QuestionBankCategoryModel.insertMany(categories);
+    }
 
-    // await ProgrammeModel.insertMany(programmes, { ordered: false });
-
-    res.send("Programmes downloaded");
+    res.send("Question banks downloaded");
   } catch (error) {
     console.log(error);
-    res.status(500).send("Error downloading programmes");
+    res.status(500).send("Error downloading question banks");
   }
 };
 
-function shuffle<T>(array: T[]): T[] {
-  const result = [...array];
+export const downloadExamSessions = async (req: Request, res: Response) => {
+  try {
+    const response = await httpService.get("server/download/sessions", {
+      headers: { centreid: req.headers.centreid },
+    });
 
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    if (response.status !== 200) {
+      return res.status(response.status).send(response.data);
+    }
 
-    [result[i], result[j]] = [result[j], result[i]];
+    await ExamSessionModel.insertMany(response.data, { ordered: false });
+
+    res.send("Examination sessions downloaded");
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return res.send("Examination sessions already downloaded");
+    }
+    res.status(500).send("Error downloading examination sessions");
   }
+};
 
-  return result;
-}
+export const downloadCandidates = async (req: Request, res: Response) => {
+  try {
+    const activeExamination = await CBTExamModel.findOne({
+      active: true,
+    }).lean();
+
+    if (!activeExamination) {
+      return res.status(400).send("No active examination downloaded");
+    }
+
+    const examSessions = await ExamSessionModel.find({
+      cbtExamination: activeExamination._id,
+    }).lean();
+
+    if (examSessions.length === 0) {
+      return res.status(400).send("No active examination sessions downloaded");
+    }
+
+    for (const examSession of examSessions) {
+      const response = await httpService.get("server/download/candidates", {
+        headers: {
+          centreid: req.headers.centreid,
+          examsession: examSession._id.toString(),
+        },
+      });
+
+      if (response.status !== 200) {
+        res.status(response.status).send(response.data);
+
+        break;
+      }
+
+      await Candidate.insertMany(response.data, { ordered: false });
+    }
+
+    const candidates = await Candidate.find({
+      cbtExamination: activeExamination._id,
+    }).select("_id");
+
+    const shuffled = candidates.sort(() => Math.random() - 0.5);
+
+    const updates = shuffled.map((candidate, index) => ({
+      updateOne: {
+        filter: { _id: candidate._id },
+        update: {
+          $set: {
+            questionCategory: (index % 10) + 1,
+          },
+        },
+      },
+    }));
+
+    await Candidate.bulkWrite(updates);
+
+    res.send("Candidates downloaded");
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return res.send("Candidates already downloaded  ");
+    }
+    res.status(500).send("Error downloading candidates");
+  }
+};

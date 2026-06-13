@@ -17,5 +17,7 @@ const schema = new Schema({
         },
     ],
 }, { timestamps: true });
-export default model("QuestionBank", schema);
+//export default model("QuestionBank", schema);
+const QuestionBankModel = model("QuestionBank", schema);
+export default QuestionBankModel;
 //# sourceMappingURL=questionBankModel.js.map
