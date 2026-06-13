@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticateCentre, downloadCandidates, downloadExamination, downloadExamSessions, downloadProgrammes, downloadQuestionBanks, } from "../controllers/downloadController.js";
+import { authenticateCentre, downloadCandidates, downloadExamination, downloadExamSessions, downloadProgrammes, downloadQuestionBanks, downloadSummary, } from "../controllers/downloadController.js";
 const downloadRouter = Router();
 downloadRouter
     .use(authenticateCentre)
@@ -7,6 +7,7 @@ downloadRouter
     .get("/programmes", downloadProgrammes)
     .get("/questionbanks", downloadQuestionBanks)
     .get("/sessions", downloadExamSessions)
-    .get("/candidates", downloadCandidates);
+    .get("/candidates", downloadCandidates)
+    .get("/summary", downloadSummary);
 export default downloadRouter;
 //# sourceMappingURL=downloadRouter.js.map

@@ -6,6 +6,7 @@ import {
   downloadExamSessions,
   downloadProgrammes,
   downloadQuestionBanks,
+  downloadSummary,
 } from "../controllers/downloadController.js";
 
 const downloadRouter = Router();
@@ -16,6 +17,7 @@ downloadRouter
   .get("/programmes", downloadProgrammes)
   .get("/questionbanks", downloadQuestionBanks)
   .get("/sessions", downloadExamSessions)
-  .get("/candidates", downloadCandidates);
+  .get("/candidates", downloadCandidates)
+  .get("/summary", downloadSummary);
 
 export default downloadRouter;

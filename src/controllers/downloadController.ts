@@ -1,17 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import Centre, { AuthenticatedCentre } from "../models/centreModel.js";
 import ExamSessionModel from "../models/examSessionModel.js";
-import ExamCentreModel from "../models/examCentreModel.js";
 import { httpService } from "../httpService.js";
 import CBTExamModel from "../models/cbtExaminationModel.js";
 import ProgrammeModel from "../models/programmeModel.js";
-import {
-  generateCategories,
-  randomizeQuestionBank,
-} from "./examRandomization.js";
+import { randomizeQuestionBank } from "./examRandomization.js";
 import QuestionBankModel from "../models/questionBankModel.js";
 import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
 import Candidate from "../models/candidateModel.js";
+import DownloadSummaryModel from "../models/downloadSummary.js";
 
 export const authenticateCentre = async (
   req: Request,
@@ -46,6 +43,7 @@ export const downloadExamination = async (req: Request, res: Response) => {
     }
 
     const { _id, ...rest } = response.data;
+
     await CBTExamModel.updateMany(
       { active: true },
       { $set: { active: false } },
@@ -59,14 +57,29 @@ export const downloadExamination = async (req: Request, res: Response) => {
       },
     );
 
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: _id },
+      { $set: { examination: "success" } },
+      { upsert: true },
+    );
+
     res.send("Examination downloaded");
   } catch (error) {
     console.log(error);
+
     res.status(500).send("Error downloading examination");
   }
 };
 
 export const downloadProgrammes = async (req: Request, res: Response) => {
+  const activeExamination = await CBTExamModel.findOne({
+    active: true,
+  });
+
+  if (!activeExamination) {
+    return res.status(400).send("No active examination downloaded");
+  }
+
   try {
     const response = await httpService.get("server/download/programmes", {
       headers: { centreid: req.headers.centreid },
@@ -82,14 +95,34 @@ export const downloadProgrammes = async (req: Request, res: Response) => {
 
     await ProgrammeModel.insertMany(programmes, { ordered: false });
 
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { programmes: "success" } },
+      { upsert: true },
+    );
+
     res.send("Programmes downloaded");
   } catch (error) {
     console.log(error);
+
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { programmes: "error" } },
+      { upsert: true },
+    );
     res.status(500).send("Error downloading programmes");
   }
 };
 
 export const downloadQuestionBanks = async (req: Request, res: Response) => {
+  const activeExamination = await CBTExamModel.findOne({
+    active: true,
+  });
+
+  if (!activeExamination) {
+    return res.status(400).send("No active examination downloaded");
+  }
+
   try {
     const response = await httpService.get("server/download/questionbanks", {
       headers: { centreid: req.headers.centreid },
@@ -116,14 +149,33 @@ export const downloadQuestionBanks = async (req: Request, res: Response) => {
       await QuestionBankCategoryModel.insertMany(categories);
     }
 
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { questionBanks: "success" } },
+      { upsert: true },
+    );
     res.send("Question banks downloaded");
   } catch (error) {
     console.log(error);
+
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { questionBanks: "error" } },
+      { upsert: true },
+    );
     res.status(500).send("Error downloading question banks");
   }
 };
 
 export const downloadExamSessions = async (req: Request, res: Response) => {
+  const activeExamination = await CBTExamModel.findOne({
+    active: true,
+  });
+
+  if (!activeExamination) {
+    return res.status(400).send("No active examination downloaded");
+  }
+
   try {
     const response = await httpService.get("server/download/sessions", {
       headers: { centreid: req.headers.centreid },
@@ -136,15 +188,41 @@ export const downloadExamSessions = async (req: Request, res: Response) => {
     await ExamSessionModel.insertMany(response.data, { ordered: false });
 
     res.send("Examination sessions downloaded");
+
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { sessions: "success" } },
+      { upsert: true },
+    );
   } catch (error: any) {
     if (error.code === 11000) {
+      await DownloadSummaryModel.updateOne(
+        { cbtExamination: activeExamination._id },
+        { $set: { sessions: "success" } },
+        { upsert: true },
+      );
+
       return res.send("Examination sessions already downloaded");
     }
+
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { sessions: "error" } },
+      { upsert: true },
+    );
+
     res.status(500).send("Error downloading examination sessions");
   }
 };
 
 export const downloadCandidates = async (req: Request, res: Response) => {
+  const activeExamination = await CBTExamModel.findOne({
+    active: true,
+  });
+
+  if (!activeExamination) {
+    return res.status(400).send("No active examination downloaded");
+  }
   try {
     const activeExamination = await CBTExamModel.findOne({
       active: true,
@@ -198,11 +276,45 @@ export const downloadCandidates = async (req: Request, res: Response) => {
 
     await Candidate.bulkWrite(updates);
 
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { candidates: "success" } },
+      { upsert: true },
+    );
+
     res.send("Candidates downloaded");
   } catch (error: any) {
     if (error.code === 11000) {
+      await DownloadSummaryModel.updateOne(
+        { cbtExamination: activeExamination._id },
+        { $set: { candidates: "success" } },
+        { upsert: true },
+      );
+
       return res.send("Candidates already downloaded  ");
     }
+
+    await DownloadSummaryModel.updateOne(
+      { cbtExamination: activeExamination._id },
+      { $set: { candidates: "error" } },
+      { upsert: true },
+    );
     res.status(500).send("Error downloading candidates");
   }
+};
+
+export const downloadSummary = async (req: Request, res: Response) => {
+  const activeExamination = await CBTExamModel.findOne({
+    active: true,
+  });
+
+  if (!activeExamination) {
+    return res.status(400).send("No active examination downloaded");
+  }
+
+  const summary = await DownloadSummaryModel.findOne({
+    cbtExamination: activeExamination._id,
+  });
+
+  res.send(summary);
 };
