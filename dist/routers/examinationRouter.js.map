@@ -1,0 +1,1 @@
+{"version":3,"file":"examinationRouter.js","sourceRoot":"","sources":["../../src/routers/examinationRouter.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,SAAS,CAAC;AACjC,OAAO,EAAE,2BAA2B,EAAE,MAAM,yCAAyC,CAAC;AAEtF,MAAM,iBAAiB,GAAG,MAAM,EAAE,CAAC;AAEnC,iBAAiB,CAAC,GAAG,CAAC,WAAW,EAAE,2BAA2B,CAAC,CAAC;AAEhE,eAAe,iBAAiB,CAAC"}
