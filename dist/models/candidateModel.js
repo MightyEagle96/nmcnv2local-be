@@ -21,6 +21,7 @@ const schema = new Schema({
     programmeCodes: String,
     duration: { type: Number, default: 0 },
     sessionId: { type: Number, default: 0 },
+    questionCategory: { type: Number, default: 0 },
 }, { timestamps: true });
 schema.index({ indexNumber: 1, cbtExamination: 1, examSession: 1 }, { unique: true });
 const Candidate = model("Candidate", schema);

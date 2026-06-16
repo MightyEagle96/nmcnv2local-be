@@ -1,0 +1,1 @@
+{"version":3,"file":"zeroClientModel.js","sourceRoot":"","sources":["../../src/models/zeroClientModel.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,KAAK,EAAE,MAAM,UAAU,CAAC;AAMzC,MAAM,MAAM,GAAG,IAAI,MAAM,CAAc;IACrC,MAAM,EAAE,EAAE,IAAI,EAAE,OAAO,EAAE,OAAO,EAAE,KAAK,EAAE;CAC1C,CAAC,CAAC;AAEH,MAAM,eAAe,GAAG,KAAK,CAAC,YAAY,EAAE,MAAM,CAAC,CAAC;AAEpD,eAAe,eAAe,CAAC"}

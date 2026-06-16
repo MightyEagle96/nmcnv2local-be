@@ -52,6 +52,7 @@ const schema = new Schema<ICandidate>(
     programmeCodes: String,
     duration: { type: Number, default: 0 },
     sessionId: { type: Number, default: 0 },
+    questionCategory: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

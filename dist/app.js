@@ -7,6 +7,8 @@ import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
 import appRouter from "./routers/appRouter.js";
+import { Server } from "socket.io";
+import http from "http";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -30,12 +32,27 @@ const corsOptions = {
     },
     credentials: true,
 };
+export const io = new Server({
+    cors: {
+        origin: "*",
+        // origin: "http://localhost:5173",
+        // credentials: true,
+    },
+});
+const server = http.createServer(app);
+io.on("connection", (socket) => {
+    console.log(`a user connected,  ${socket.id}`);
+    socket.on("disconnect", () => {
+        console.log(`user disconnected, ${socket.id}`);
+    });
+});
 app
     .use(cors(corsOptions))
     .use(cookieParser())
     .use(morgan("dev"))
     .use(express.json({ limit: "50mb" }))
     .use("/api", appRouter)
-    .use(express.static(path.join(__dirname, "build")))
-    .listen(4001, () => console.log("listening on port 4001"));
+    .use(express.static(path.join(__dirname, "build")));
+server.listen(4001, () => console.log(`Server is running on port ${4001}`));
+// .listen(4001, () => console.log("listening on port 4001"));
 //# sourceMappingURL=app.js.map
