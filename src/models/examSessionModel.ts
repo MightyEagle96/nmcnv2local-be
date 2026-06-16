@@ -8,16 +8,23 @@ interface IExamSession {
   sessionNumber: number;
   status: status;
   centre: Types.ObjectId;
+  activationTime: Date;
+  completionTime: Date;
+  uploadTime: Date;
 }
 
 const schema = new Schema<IExamSession>(
   {
     cbtExamination: { type: Schema.Types.ObjectId, ref: "CBTExamination" },
+
     sessionName: { type: String, lowercase: true },
     sessionCode: { type: String, lowercase: true },
     sessionNumber: { type: Number },
     status: { type: String, default: "not started" },
     centre: { type: Schema.Types.ObjectId, ref: "Centre" },
+    activationTime: Date,
+    completionTime: Date,
+    uploadTime: Date,
   },
   { timestamps: true },
 );

@@ -1,8 +1,15 @@
 import { Router } from "express";
-import { GetExaminationsWithSessions } from "../controllers/examinationController.js";
+import {
+  activateSession,
+  activeExaminationAndSession,
+  GetExaminationsWithSessions,
+} from "../controllers/examinationController.js";
 
 const examinationRouter = Router();
 
-examinationRouter.get("/viewlist", GetExaminationsWithSessions);
+examinationRouter
+  .get("/viewlist", GetExaminationsWithSessions)
+  .patch("/activatesession", activateSession)
+  .get("/activesession", activeExaminationAndSession);
 
 export default examinationRouter;

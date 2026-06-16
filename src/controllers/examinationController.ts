@@ -1,49 +1,7 @@
 import { Request, Response } from "express";
 import CBTExamModel from "../models/cbtExaminationModel.js";
-
-// export const GetExaminationsWithSessions = async (
-//   req: Request,
-//   res: Response,
-// ) => {
-//   try {
-//     const examinations = await CBTExamModel.aggregate([
-//       {
-//         $lookup: {
-//           from: "examsessions", // collection name of ExamSession
-//           localField: "_id",
-//           foreignField: "cbtExamination",
-//           as: "sessions",
-//         },
-//       },
-//       {
-//         $project: {
-//           name: 1,
-//           active: 1,
-//           scheduledTime: 1,
-//           sessions: {
-//             _id: 1,
-//             sessionName: 1,
-//             sessionCode: 1,
-//             sessionNumber: 1,
-//             status: 1,
-//           },
-//         },
-//       },
-//       {
-//         $sort: {
-//           scheduledTime: -1,
-//         },
-//       },
-//     ]);
-
-//     return res.status(200).json(examinations);
-//   } catch (error) {
-//     return res.status(500).json({
-//       message: "Failed to fetch examinations",
-//       error,
-//     });
-//   }
-// };
+import ExamSessionModel from "../models/examSessionModel.js";
+import { match } from "assert";
 
 export const GetExaminationsWithSessions = async (
   req: Request,
@@ -88,6 +46,7 @@ export const GetExaminationsWithSessions = async (
             sessionCode: 1,
             sessionNumber: 1,
             status: 1,
+            cbtExamination: 1,
           },
           activatedSession: {
             _id: 1,
@@ -95,6 +54,7 @@ export const GetExaminationsWithSessions = async (
             sessionCode: 1,
             sessionNumber: 1,
             status: 1,
+            cbtExamination: 1,
           },
         },
       },
@@ -108,6 +68,62 @@ export const GetExaminationsWithSessions = async (
     console.log(examinations);
 
     res.send(examinations);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+export const activateSession = async (req: Request, res: Response) => {
+  try {
+    const { _id, cbtExamination } = req.body;
+
+    await ExamSessionModel.updateOne(
+      { _id, cbtExamination },
+      { $set: { status: "activated" } },
+    );
+
+    // console.log(result);
+    res.send("Session activated");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+export const activeExaminationAndSession = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const result = await ExamSessionModel.aggregate([
+      {
+        $match: { status: "activated" },
+      },
+      {
+        $lookup: {
+          from: "cbtexaminations",
+          localField: "cbtExamination",
+          foreignField: "_id",
+          as: "examination",
+        },
+      },
+      {
+        $unwind: "$examination",
+      },
+      {
+        $match: {
+          "examination.active": false,
+        },
+      },
+      {
+        $limit: 1,
+      },
+    ]);
+
+    if (!result.length) {
+      res.status(404).send({ message: "No active session found" });
+      return;
+    }
+
+    res.send(result[0]);
   } catch (error) {
     res.status(500).send(error);
   }

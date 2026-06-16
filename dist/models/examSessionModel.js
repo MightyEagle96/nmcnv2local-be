@@ -6,6 +6,9 @@ const schema = new Schema({
     sessionNumber: { type: Number },
     status: { type: String, default: "not started" },
     centre: { type: Schema.Types.ObjectId, ref: "Centre" },
+    activationTime: Date,
+    completionTime: Date,
+    uploadTime: Date,
 }, { timestamps: true });
 schema.index({ cbtExamination: 1, sessionNumber: 1 }, { unique: true });
 const ExamSessionModel = model("ExamSession", schema);
