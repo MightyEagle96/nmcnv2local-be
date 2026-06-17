@@ -95,7 +95,7 @@ export const activeExaminationAndSession = async (req, res) => {
             },
             {
                 $match: {
-                    "examination.active": false,
+                    "examination.active": true,
                 },
             },
             {
@@ -103,7 +103,8 @@ export const activeExaminationAndSession = async (req, res) => {
             },
         ]);
         if (!result.length) {
-            res.status(404).send({ message: "No active session found" });
+            //res.status(404).send({ message: "No active session found" });
+            res.send(null);
             return;
         }
         res.send(result[0]);
