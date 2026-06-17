@@ -22,6 +22,14 @@ const schema = new Schema({
     duration: { type: Number, default: 0 },
     sessionId: { type: Number, default: 0 },
     questionCategory: { type: Number, default: 0 },
+    loggedIn: { type: Boolean, default: false },
+    ipAddress: { type: String },
+    submitted: { type: Boolean, default: false },
+    flaggedForInfraction: { type: Boolean, default: false },
+    responseCount: { type: Number, default: 0 },
+    loggedInTime: { type: Date },
+    submittedTime: { type: Date },
+    loginCount: { type: Number, default: 0 },
 }, { timestamps: true });
 schema.index({ indexNumber: 1, cbtExamination: 1, examSession: 1 }, { unique: true });
 const Candidate = model("Candidate", schema);

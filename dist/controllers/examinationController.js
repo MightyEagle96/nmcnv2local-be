@@ -1,5 +1,6 @@
 import CBTExamModel from "../models/cbtExaminationModel.js";
 import ExamSessionModel from "../models/examSessionModel.js";
+import Candidate from "../models/candidateModel.js";
 export const GetExaminationsWithSessions = async (req, res) => {
     try {
         const examinations = await CBTExamModel.aggregate([
@@ -108,6 +109,48 @@ export const activeExaminationAndSession = async (req, res) => {
             return;
         }
         res.send(result[0]);
+    }
+    catch (error) {
+        res.status(500).send(error);
+    }
+};
+export const viewSessionCandidates = async (req, res) => {
+    try {
+        const page = (req.query.page || 1);
+        const limit = (req.query.limit || 50);
+        const totalCandidates = await Candidate.countDocuments({
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        });
+        const candidates = await Candidate.find({
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        })
+            .sort({ indexNumber: 1, firstName: 1, lastName: 1 })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .select({
+            firstName: 1,
+            middleName: 1,
+            lastName: 1,
+            indexNumber: 1,
+            loggedInTime: 1,
+            submitted: 1,
+            submittedTime: 1,
+            ipAddress: 1,
+            loginCount: 1,
+        })
+            .lean();
+        const mappedRecords = candidates.map((candidate, i) => {
+            return {
+                ...candidate,
+                id: (page - 1) * limit + i + 1,
+            };
+        });
+        res.send({
+            candidates: mappedRecords,
+            totalCandidates,
+        });
     }
     catch (error) {
         res.status(500).send(error);
