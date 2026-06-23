@@ -1,6 +1,9 @@
 import { Router } from "express";
-import { examinationMiddleware, preLoginCandidate, } from "../controllers/cbtController.js";
+import { examinationMiddleware, loginCandidate, preLoginCandidate, } from "../controllers/cbtController.js";
 const candidateCbtRouter = Router();
-candidateCbtRouter.post("/prelogin", examinationMiddleware, preLoginCandidate);
+candidateCbtRouter
+    .use(examinationMiddleware)
+    .post("/prelogin", preLoginCandidate)
+    .get("/login", loginCandidate);
 export default candidateCbtRouter;
 //# sourceMappingURL=candidateCbtRouter.js.map

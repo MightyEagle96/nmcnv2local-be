@@ -1,11 +1,89 @@
 import { NextFunction, Request, Response } from "express";
 import Candidate from "../models/candidateModel.js";
 import ExamSessionModel from "../models/examSessionModel.js";
+import { generateToken, tokens } from "./jwtController.js";
+import { ConcurrentJobQueue } from "./DataQueue.js";
+import * as UAParser from "ua-parser-js";
+import CandidateMachineModel from "../models/candidateMachine.js";
 
+const dataQueue = new ConcurrentJobQueue({
+  concurrency: 1,
+  maxQueueSize: 100,
+  retries: 3,
+  retryDelay: 1000,
+  shutdownTimeout: 30000,
+});
 export const loginCandidate = async (req: Request, res: Response) => {
   try {
-    await Candidate.findOne({ indexNumber: req.body.indexNumber });
-  } catch (error) {}
+    const parser = new UAParser.UAParser(req.headers["user-agent"]);
+    const result = parser.getResult();
+
+    const candidate = await Candidate.findById(req.query.candidate)
+      .lean()
+      .populate("programmes", { name: 1, code: 1 })
+      .select({ avatar: 0 });
+
+    if (!candidate) {
+      return res.status(400).send("Candidate not found");
+    }
+
+    const data = {
+      name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
+      indexNumber: candidate.indexNumber,
+      programmes: candidate.programmes,
+      duration: candidate.duration,
+    };
+
+    const accessToken = generateToken(data);
+
+    res
+      .cookie(tokens.auth_token, accessToken, {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 1000 * 60 * 60 * 6,
+      })
+      .send("Logged In");
+
+    const ipAddress = req.ip?.replace("::ffff:", "");
+
+    const cbtExamination = req.headers.cbtexamination as string;
+    const examSession = req.headers.examsession as string;
+
+    dataQueue.enqueue(async () => {
+      const machineDetail = {
+        ipAddress,
+        os: result.os.name,
+        osVersion: result.os.version,
+        browser: result.browser.name,
+        browserVersion: result.browser.version,
+        loginTime: new Date(),
+      };
+
+      await Candidate.updateOne(
+        { _id: candidate._id },
+        {
+          $set: { ipAddress, loggedIn: true },
+          $inc: { loginCount: 1 },
+          $setOnInsert: { loggedInTime: new Date() },
+        },
+      );
+
+      await CandidateMachineModel.updateOne(
+        {
+          candidate: candidate._id,
+          cbtExamination,
+          examSession,
+        },
+        {
+          $push: { machineDetails: machineDetail },
+        },
+        { upsert: true },
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
 };
 
 export const preLoginCandidate = async (req: Request, res: Response) => {
@@ -21,6 +99,7 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
 
     const candidate = await Candidate.findOne({
       indexNumber: req.body.indexNumber,
+      cbtExamination: req.headers.cbtexamination,
     }).populate("programmes", { name: 1, code: 1 });
 
     if (!candidate) {
@@ -48,6 +127,7 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
     }
 
     res.send({
+      _id: candidate._id,
       avatar: candidate.avatar,
       name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
       indexNumber: candidate.indexNumber,
