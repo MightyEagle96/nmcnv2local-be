@@ -1,6 +1,6 @@
 import axios from "axios";
 const centralServerRoute = {
-    dev: "http://192.168.16.171:4000/api/",
+    dev: "http://192.168.16.219:4000/api/",
     prod: "https://policymeeting.jamb.gov.ng/api/",
 };
 const route = process.env.NODE_ENV === "development"

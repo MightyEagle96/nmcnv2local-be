@@ -21,7 +21,7 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
 
     const candidate = await Candidate.findOne({
       indexNumber: req.body.indexNumber,
-    });
+    }).populate("programmes", { name: 1, code: 1 });
 
     if (!candidate) {
       return res.status(400).send("Candidate not found");
@@ -35,7 +35,9 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
       return res.status(400).send("Candidate already logged in");
     }
 
-    if (candidate.ipAddress !== req.ip) {
+    console.log(req.ip?.replace("::ffff:", ""));
+
+    if (candidate.loggedIn && candidate.ipAddress !== req.ip) {
       return res
         .status(400)
         .send("Candidate already logged in from another ip");
@@ -44,7 +46,13 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
     if (candidate.submitted) {
       return res.status(400).send("Candidate already submitted");
     }
-    res.send(candidate);
+
+    res.send({
+      avatar: candidate.avatar,
+      name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
+      indexNumber: candidate.indexNumber,
+      programmes: candidate.programmes,
+    });
   } catch (error: any) {
     res.status(500).send(new Error(error).message);
   }
