@@ -6,6 +6,10 @@ export const myProfile = async (req, res) => {
         res.send(req.centre);
         return;
     }
+    if (req.candidate) {
+        res.send(req.candidate);
+        return;
+    }
     res.sendStatus(401);
 };
 export const getRefreshToken = async (req, res) => {

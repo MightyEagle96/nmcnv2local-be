@@ -1,9 +1,10 @@
 import Candidate from "../models/candidateModel.js";
 import ExamSessionModel from "../models/examSessionModel.js";
-import { generateToken, tokens } from "./jwtController.js";
+import { appRoles, generateToken, tokens } from "./jwtController.js";
 import { ConcurrentJobQueue } from "./DataQueue.js";
 import * as UAParser from "ua-parser-js";
 import CandidateMachineModel from "../models/candidateMachine.js";
+import QuestionBankModel from "../models/questionBankModel.js";
 const dataQueue = new ConcurrentJobQueue({
     concurrency: 1,
     maxQueueSize: 100,
@@ -27,6 +28,8 @@ export const loginCandidate = async (req, res) => {
             indexNumber: candidate.indexNumber,
             programmes: candidate.programmes,
             duration: candidate.duration,
+            role: appRoles.candidate,
+            _id: candidate._id,
         };
         const accessToken = generateToken(data);
         res
@@ -112,35 +115,72 @@ export const preLoginCandidate = async (req, res) => {
     }
 };
 export const examinationMiddleware = async (req, res, next) => {
-    const result = await ExamSessionModel.aggregate([
-        {
-            $match: { status: "activated" },
-        },
-        {
-            $lookup: {
-                from: "cbtexaminations",
-                localField: "cbtExamination",
-                foreignField: "_id",
-                as: "examination",
+    try {
+        const result = await ExamSessionModel.aggregate([
+            {
+                $match: { status: "activated" },
             },
-        },
-        {
-            $unwind: "$examination",
-        },
-        {
-            $match: {
-                "examination.active": true,
+            {
+                $lookup: {
+                    from: "cbtexaminations",
+                    localField: "cbtExamination",
+                    foreignField: "_id",
+                    as: "examination",
+                },
             },
-        },
-        {
-            $limit: 1,
-        },
-    ]);
-    if (result.length < 0) {
+            {
+                $unwind: "$examination",
+            },
+            {
+                $match: {
+                    "examination.active": true,
+                },
+            },
+            {
+                $limit: 1,
+            },
+        ]);
+        if (result.length < 0) {
+            return res.status(400).send("No active examination");
+        }
+        req.headers.examsession = result[0]._id.toString();
+        req.headers.cbtexamination = result[0].cbtExamination.toString();
+        next();
+    }
+    catch (error) {
         return res.status(400).send("No active examination");
     }
-    req.headers.examsession = result[0]._id.toString();
-    req.headers.cbtexamination = result[0].cbtExamination.toString();
-    next();
+};
+export const instructionSummary = async (req, res) => {
+    try {
+        const candidate = await Candidate.findById(req.candidate?._id)
+            .lean()
+            .select({
+            avatar: 0,
+        })
+            .populate("cbtExamination", { name: 1 });
+        //.populate("programmes", { name: 1, code: 1, _id: 1 });
+        if (!candidate) {
+            return res.status(400).send("Candidate not found");
+        }
+        const questionBanks = await QuestionBankModel.find({
+            programme: { $in: candidate.programmes },
+        })
+            .populate("programme", { name: 1 })
+            .select({ questionsCount: 1, programme: 1 })
+            .lean();
+        console.log(questionBanks);
+        const totalQuestions = questionBanks.reduce((a, b) => a + b.questionsCount, 0);
+        res.send({
+            examination: candidate.cbtExamination,
+            duration: candidate.duration / (60 * 1000),
+            questionBanks,
+            totalQuestions,
+        });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(400).send(error);
+    }
 };
 //# sourceMappingURL=cbtController.js.map

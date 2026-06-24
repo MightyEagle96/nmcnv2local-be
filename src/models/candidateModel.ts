@@ -1,6 +1,7 @@
 import mongoose, { Schema, Types, model } from "mongoose";
 
 import ProgrammeModel from "./programmeModel.js";
+import { Request } from "express";
 
 export interface ICandidate {
   firstName: string;
@@ -35,6 +36,11 @@ export interface ICandidate {
   loggedInTime: Date;
   submittedTime: Date;
   loginCount: number;
+  _id: Types.ObjectId;
+}
+
+export interface AuthenticatedCandidate extends Request {
+  candidate?: ICandidate;
 }
 
 const schema = new Schema<ICandidate>(

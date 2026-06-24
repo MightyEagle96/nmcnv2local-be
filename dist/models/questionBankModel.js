@@ -16,8 +16,12 @@ const schema = new Schema({
             endGroup: { type: Boolean, default: false },
         },
     ],
+    questionsCount: { type: Number, default: 0 },
 }, { timestamps: true });
 //export default model("QuestionBank", schema);
+schema.pre("save", function () {
+    this.questionsCount = this.questions.length;
+});
 const QuestionBankModel = model("QuestionBank", schema);
 export default QuestionBankModel;
 //# sourceMappingURL=questionBankModel.js.map

@@ -20,6 +20,7 @@ export interface IQuestionBank {
   dateTaken: Date;
   questionBankCategory?: number;
   questionBank?: Types.ObjectId;
+  questionsCount?: number;
 }
 
 const schema = new Schema<IQuestionBank>(
@@ -39,10 +40,16 @@ const schema = new Schema<IQuestionBank>(
         endGroup: { type: Boolean, default: false },
       },
     ],
+    questionsCount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 //export default model("QuestionBank", schema);
 
+schema.pre("save", function () {
+  this.questionsCount = this.questions.length;
+});
+
 const QuestionBankModel = model<IQuestionBank>("QuestionBank", schema);
+
 export default QuestionBankModel;

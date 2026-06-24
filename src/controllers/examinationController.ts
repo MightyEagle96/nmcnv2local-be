@@ -78,9 +78,22 @@ export const activateSession = async (req: Request, res: Response) => {
   try {
     const { _id, cbtExamination } = req.body;
 
+    const examination = await CBTExamModel.findOne({ _id: cbtExamination });
+
+    if (!examination) {
+      return res.status(400).send("Examination not found");
+    } else if (!examination.active) {
+      return res.status(400).send("Examination not active");
+    }
+
     await ExamSessionModel.updateOne(
       { _id, cbtExamination },
       { $set: { status: "activated" } },
+    );
+
+    await Candidate.updateMany(
+      { cbtExamination, examSession: _id },
+      { $set: { duration: examination.duration } },
     );
 
     // console.log(result);

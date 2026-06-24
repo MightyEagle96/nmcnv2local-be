@@ -16,6 +16,11 @@ export const myProfile = async (req: JointInterface, res: Response) => {
     return;
   }
 
+  if (req.candidate) {
+    res.send(req.candidate);
+    return;
+  }
+
   res.sendStatus(401);
 };
 
