@@ -117,8 +117,6 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
       return res.status(400).send("Candidate already logged in");
     }
 
-    console.log(req.ip?.replace("::ffff:", ""));
-
     if (candidate.loggedIn && candidate.ipAddress !== req.ip) {
       return res
         .status(400)
@@ -209,8 +207,6 @@ export const instructionSummary = async (
       .select({ questionsCount: 1, programme: 1 })
       .lean();
 
-    console.log(questionBanks);
-
     const totalQuestions = questionBanks.reduce(
       (a, b) => a + b.questionsCount,
       0,
@@ -223,7 +219,18 @@ export const instructionSummary = async (
       totalQuestions,
     });
   } catch (error) {
-    console.log(error);
     res.status(400).send(error);
+  }
+};
+
+export const getAvatar = async (req: AuthenticatedCandidate, res: Response) => {
+  try {
+    const avatar = await Candidate.findById(req.candidate?._id).select({
+      avatar: 1,
+    });
+
+    res.send(avatar);
+  } catch (error) {
+    res.status(500).send("Error");
   }
 };
