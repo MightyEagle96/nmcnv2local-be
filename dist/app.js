@@ -32,14 +32,12 @@ const corsOptions = {
     },
     credentials: true,
 };
-export const io = new Server({
+const server = http.createServer(app);
+export const io = new Server(server, {
     cors: {
         origin: "*",
-        // origin: "http://localhost:5173",
-        // credentials: true,
     },
 });
-const server = http.createServer(app);
 io.on("connection", (socket) => {
     console.log(`a user connected,  ${socket.id}`);
     socket.on("disconnect", () => {
@@ -54,5 +52,4 @@ app
     .use("/api", appRouter)
     .use(express.static(path.join(__dirname, "build")));
 server.listen(4001, () => console.log(`Server is running on port ${4001}`));
-// .listen(4001, () => console.log("listening on port 4001"));
 //# sourceMappingURL=app.js.map
