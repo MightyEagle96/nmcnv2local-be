@@ -173,7 +173,7 @@ export const instructionSummary = async (req, res) => {
         const totalQuestions = questionBanks.reduce((a, b) => a + b.questionsCount, 0);
         res.send({
             examination: candidate.cbtExamination,
-            duration: candidate.duration / (60 * 1000),
+            duration: candidate.duration ? candidate.duration / (60 * 1000) : 0,
             questionBanks,
             totalQuestions,
         });

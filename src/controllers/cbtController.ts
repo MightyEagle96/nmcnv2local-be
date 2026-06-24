@@ -218,7 +218,7 @@ export const instructionSummary = async (
 
     res.send({
       examination: candidate.cbtExamination,
-      duration: candidate.duration / (60 * 1000),
+      duration: candidate.duration ? candidate.duration / (60 * 1000) : 0,
       questionBanks,
       totalQuestions,
     });

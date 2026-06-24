@@ -20,7 +20,7 @@ export interface IQuestionBank {
   dateTaken: Date;
   questionBankCategory?: number;
   questionBank?: Types.ObjectId;
-  questionsCount?: number;
+  questionsCount: number;
 }
 
 const schema = new Schema<IQuestionBank>(
