@@ -213,6 +213,7 @@ export const reloginCandidate = async (req, res) => {
             return res.status(400).send("Candidate not found");
         }
         await Candidate.updateOne({ _id: candidate._id }, { $set: { loggedIn: false, ipAddress: "" } });
+        await webSocketController(candidate._id);
         res.send("Candidate relogged in");
     }
     catch (error) {
@@ -228,12 +229,15 @@ export const testWebSocket = async (req, res) => {
         if (!candidate) {
             return res.status(400).send("Candidate not found");
         }
-        io.to(`candidate:${candidate._id}`).emit("test", "test");
-        res.send("Candidate relogged in");
+        await webSocketController(candidate._id);
+        res.send("Browser Closed");
     }
     catch (error) {
         console.error(error);
     }
+};
+const webSocketController = async (candidateId) => {
+    io.to(`candidate:${candidateId}`).emit("test", "test");
 };
 export const clearCookie = async (req, res) => {
     res
