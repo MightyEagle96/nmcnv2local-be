@@ -43,6 +43,11 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log(`user disconnected, ${socket.id}`);
     });
+    socket.on("join-exam", ({ candidateId }) => {
+        const room = `candidate:${candidateId}`;
+        socket.join(room);
+        console.log(`Socket ${socket.id} joined room ${room}`);
+    });
 });
 app
     .use(cors(corsOptions))

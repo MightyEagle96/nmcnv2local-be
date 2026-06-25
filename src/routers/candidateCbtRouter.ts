@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   examinationMiddleware,
   getAvatar,
+  getQuestions,
   instructionSummary,
   loginCandidate,
   preLoginCandidate,
@@ -15,6 +16,7 @@ candidateCbtRouter
   .post("/prelogin", preLoginCandidate)
   .get("/login", loginCandidate)
   .get("/instructionsummary", authenticateToken, instructionSummary)
-  .get("/avatar", authenticateToken, getAvatar);
+  .get("/avatar", authenticateToken, getAvatar)
+  .get("/getquestions", authenticateToken, getQuestions);
 
 export default candidateCbtRouter;

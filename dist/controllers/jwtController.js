@@ -52,6 +52,9 @@ export async function authenticateToken(req, res, next) {
                 if (!candidate) {
                     return res.status(401).send("Not authenticated");
                 }
+                if (!candidate.loggedIn) {
+                    return res.status(401).send("Not authenticated");
+                }
                 const data = {
                     name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
                     indexNumber: candidate.indexNumber,
@@ -59,6 +62,8 @@ export async function authenticateToken(req, res, next) {
                     duration: candidate.duration,
                     role: appRoles.candidate,
                     _id: candidate._id,
+                    school: candidate.school,
+                    questionCategory: candidate.questionCategory,
                 };
                 req.candidate = data;
                 //req.centre = await Centre.findById(decoded._id).lean();

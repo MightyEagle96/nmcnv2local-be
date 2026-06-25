@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { examinationMiddleware, getAvatar, instructionSummary, loginCandidate, preLoginCandidate, } from "../controllers/cbtController.js";
+import { examinationMiddleware, getAvatar, getQuestions, instructionSummary, loginCandidate, preLoginCandidate, } from "../controllers/cbtController.js";
 import { authenticateToken } from "../controllers/jwtController.js";
 const candidateCbtRouter = Router();
 candidateCbtRouter
@@ -7,6 +7,7 @@ candidateCbtRouter
     .post("/prelogin", preLoginCandidate)
     .get("/login", loginCandidate)
     .get("/instructionsummary", authenticateToken, instructionSummary)
-    .get("/avatar", authenticateToken, getAvatar);
+    .get("/avatar", authenticateToken, getAvatar)
+    .get("/getquestions", authenticateToken, getQuestions);
 export default candidateCbtRouter;
 //# sourceMappingURL=candidateCbtRouter.js.map

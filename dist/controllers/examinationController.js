@@ -1,6 +1,8 @@
 import CBTExamModel from "../models/cbtExaminationModel.js";
 import ExamSessionModel from "../models/examSessionModel.js";
 import Candidate from "../models/candidateModel.js";
+import { io } from "../app.js";
+import { tokens } from "./jwtController.js";
 export const GetExaminationsWithSessions = async (req, res) => {
     try {
         const examinations = await CBTExamModel.aggregate([
@@ -216,5 +218,27 @@ export const reloginCandidate = async (req, res) => {
     catch (error) {
         res.status(500).send(error);
     }
+};
+export const testWebSocket = async (req, res) => {
+    try {
+        const candidate = await Candidate.findOne({
+            indexNumber: req.body.indexNumber,
+            cbtExamination: req.headers.cbtexamination,
+        });
+        if (!candidate) {
+            return res.status(400).send("Candidate not found");
+        }
+        io.to(`candidate:${candidate._id}`).emit("test", "test");
+        res.send("Candidate relogged in");
+    }
+    catch (error) {
+        console.error(error);
+    }
+};
+export const clearCookie = async (req, res) => {
+    res
+        .clearCookie(tokens.auth_token)
+        .clearCookie(tokens.refresh_token)
+        .send("Logged Out");
 };
 //# sourceMappingURL=examinationController.js.map

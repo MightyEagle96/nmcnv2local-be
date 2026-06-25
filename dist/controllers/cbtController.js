@@ -5,6 +5,7 @@ import { ConcurrentJobQueue } from "./DataQueue.js";
 import * as UAParser from "ua-parser-js";
 import CandidateMachineModel from "../models/candidateMachine.js";
 import QuestionBankModel from "../models/questionBankModel.js";
+import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
 const dataQueue = new ConcurrentJobQueue({
     concurrency: 1,
     maxQueueSize: 100,
@@ -30,6 +31,7 @@ export const loginCandidate = async (req, res) => {
             duration: candidate.duration,
             role: appRoles.candidate,
             _id: candidate._id,
+            school: candidate.school,
         };
         const accessToken = generateToken(data);
         res
@@ -189,6 +191,25 @@ export const getAvatar = async (req, res) => {
     }
     catch (error) {
         res.status(500).send("Error");
+    }
+};
+export const getQuestions = async (req, res) => {
+    try {
+        const candidate = await Candidate.findById(req.candidate?._id);
+        if (!candidate) {
+            return res.status(400).send("Candidate not found");
+        }
+        const questionBanks = await QuestionBankCategoryModel.find({
+            programme: { $in: candidate.programmes },
+            questionBankCategory: candidate.questionCategory,
+        })
+            // .populate("programme", { name: 1 })
+            // .select({ questionsCount: 1, programme: 1 })
+            .lean();
+        res.send(questionBanks);
+    }
+    catch (error) {
+        res.sendStatus(500);
     }
 };
 //# sourceMappingURL=cbtController.js.map
