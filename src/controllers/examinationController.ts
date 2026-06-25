@@ -190,3 +190,63 @@ export const viewSessionCandidates = async (req: Request, res: Response) => {
     res.status(500).send(error);
   }
 };
+
+export const getCandidate = async (req: Request, res: Response) => {
+  try {
+    const candidate = await Candidate.findOne({
+      indexNumber: req.body.indexNumber,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+    })
+      .lean()
+      .select({
+        avatar: 1,
+        indexNumber: 1,
+        firstName: 1,
+        middleName: 1,
+        lastName: 1,
+        submitted: 1,
+        flaggedForInfraction: 1,
+        loggedIn: 1,
+      });
+
+    if (!candidate) {
+      return res.status(400).send("Candidate not found");
+    }
+
+    if (candidate.submitted === true) {
+      return res.status(400).send("Candidate already submitted");
+    }
+
+    if (!candidate.loggedIn) {
+      return res.status(400).send("Candidate not logged in");
+    }
+
+    if (candidate.flaggedForInfraction) {
+      return res.status(400).send("Candidate has been flagged for infraction");
+    }
+    res.send(candidate);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+
+export const reloginCandidate = async (req: Request, res: Response) => {
+  try {
+    const candidate = await Candidate.findOne({
+      indexNumber: req.body.indexNumber,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+    });
+    if (!candidate) {
+      return res.status(400).send("Candidate not found");
+    }
+    await Candidate.updateOne(
+      { _id: candidate._id },
+      { $set: { loggedIn: false, ipAddress: "" } },
+    );
+    res.send("Candidate relogged in");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};

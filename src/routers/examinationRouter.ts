@@ -2,7 +2,9 @@ import { Router } from "express";
 import {
   activateSession,
   activeExaminationAndSession,
+  getCandidate,
   GetExaminationsWithSessions,
+  reloginCandidate,
   viewSessionCandidates,
 } from "../controllers/examinationController.js";
 import { examinationMiddleware } from "../controllers/cbtController.js";
@@ -17,6 +19,8 @@ examinationRouter
     "/examinationsessioncandidates",
     examinationMiddleware,
     viewSessionCandidates,
-  );
+  )
+  .post("/getcandidate", examinationMiddleware, getCandidate)
+  .post("/relogincandidate", examinationMiddleware, reloginCandidate);
 
 export default examinationRouter;

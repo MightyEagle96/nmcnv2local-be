@@ -1,11 +1,13 @@
 import { Router } from "express";
-import { activateSession, activeExaminationAndSession, GetExaminationsWithSessions, viewSessionCandidates, } from "../controllers/examinationController.js";
+import { activateSession, activeExaminationAndSession, getCandidate, GetExaminationsWithSessions, reloginCandidate, viewSessionCandidates, } from "../controllers/examinationController.js";
 import { examinationMiddleware } from "../controllers/cbtController.js";
 const examinationRouter = Router();
 examinationRouter
     .get("/viewlist", GetExaminationsWithSessions)
     .patch("/activatesession", activateSession)
     .get("/activesession", activeExaminationAndSession)
-    .get("/examinationsessioncandidates", examinationMiddleware, viewSessionCandidates);
+    .get("/examinationsessioncandidates", examinationMiddleware, viewSessionCandidates)
+    .post("/getcandidate", examinationMiddleware, getCandidate)
+    .post("/relogincandidate", examinationMiddleware, reloginCandidate);
 export default examinationRouter;
 //# sourceMappingURL=examinationRouter.js.map
