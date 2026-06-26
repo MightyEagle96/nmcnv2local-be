@@ -283,3 +283,24 @@ export const clearCookie = async (req: Request, res: Response) => {
     .clearCookie(tokens.refresh_token)
     .send("Logged Out");
 };
+
+export const reloginAllCandidates = async (req: Request, res: Response) => {
+  try {
+    const loggedInCandidates = await Candidate.find({
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+      loggedIn: true,
+    }).select({ _id: 1 });
+    loggedInCandidates.map(async (candidate) => {
+      await Candidate.updateOne(
+        { _id: candidate._id },
+        { $set: { loggedIn: false, ipAddress: "" } },
+      );
+      await webSocketController(candidate._id);
+    });
+
+    res.send("Candidates relogged in");
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};

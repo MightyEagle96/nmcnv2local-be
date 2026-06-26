@@ -5,6 +5,7 @@ import {
   clearCookie,
   getCandidate,
   GetExaminationsWithSessions,
+  reloginAllCandidates,
   reloginCandidate,
   testWebSocket,
   viewSessionCandidates,
@@ -25,6 +26,7 @@ examinationRouter
   .post("/getcandidate", examinationMiddleware, getCandidate)
   .post("/relogincandidate", examinationMiddleware, reloginCandidate)
   .post("/messagecandidate", examinationMiddleware, testWebSocket)
+  .get("/reloginallcandidates", examinationMiddleware, reloginAllCandidates)
   .get("/clearcookie", clearCookie);
 
 export default examinationRouter;
