@@ -37,9 +37,11 @@ export const getRefreshToken = async (req: JointInterface, res: Response) => {
       process.env.REFRESH_TOKEN as string,
     ) as JwtPayload & IPayload;
 
+    console.log(decoded);
     if (!decoded?._id) {
       return res.sendStatus(401);
     }
+
     if (decoded.role === appRoles.admin) {
       const adminAccount = await Centre.findById(decoded._id).lean();
 
@@ -75,7 +77,12 @@ export const getRefreshToken = async (req: JointInterface, res: Response) => {
       return;
     }
   } catch (error) {
-    res.status(401).send("Invalid refresh token");
+    res
+      .status(401)
+
+      .clearCookie(tokens.auth_token)
+      .clearCookie(tokens.refresh_token)
+      .send("Invalid refresh token");
   }
   //  res.send(req.cookies[tokens.refresh_token]);
 };

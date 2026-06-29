@@ -19,6 +19,7 @@ export const getRefreshToken = async (req, res) => {
     }
     try {
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN);
+        console.log(decoded);
         if (!decoded?._id) {
             return res.sendStatus(401);
         }
@@ -53,7 +54,11 @@ export const getRefreshToken = async (req, res) => {
         }
     }
     catch (error) {
-        res.status(401).send("Invalid refresh token");
+        res
+            .status(401)
+            .clearCookie(tokens.auth_token)
+            .clearCookie(tokens.refresh_token)
+            .send("Invalid refresh token");
     }
     //  res.send(req.cookies[tokens.refresh_token]);
 };
