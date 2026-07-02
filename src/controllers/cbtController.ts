@@ -38,6 +38,9 @@ export const loginCandidate = async (req: Request, res: Response) => {
       return res.status(400).send("Candidate not found");
     }
 
+    if (candidate.loggedIn) {
+      return res.status(400).send("Candidate already logged in");
+    }
     const data = {
       name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
       indexNumber: candidate.indexNumber,
