@@ -201,6 +201,8 @@ export const viewSessionCandidates = async (req: Request, res: Response) => {
     res.send({
       candidates: mappedRecords,
       totalCandidates,
+      writing,
+      submitted,
     });
   } catch (error) {
     res.status(500).send(error);
