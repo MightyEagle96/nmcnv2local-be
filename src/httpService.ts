@@ -1,6 +1,6 @@
 import axios from "axios";
 const centralServerRoute = {
-  dev: "http://192.168.16.155:4000/api/",
+  dev: "http://192.168.16.165:4000/api/",
   prod: "https://policymeeting.jamb.gov.ng/api/",
 };
 

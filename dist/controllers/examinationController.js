@@ -149,6 +149,8 @@ export const viewSessionCandidates = async (req, res) => {
             submittedTime: 1,
             ipAddress: 1,
             loginCount: 1,
+            responseCount: 1,
+            duration: 1,
         })
             .lean();
         const mappedRecords = candidates.map((candidate, i) => {

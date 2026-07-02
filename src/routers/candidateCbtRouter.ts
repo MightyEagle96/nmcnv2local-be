@@ -6,6 +6,7 @@ import {
   instructionSummary,
   loginCandidate,
   preLoginCandidate,
+  saveResponses,
 } from "../controllers/cbtController.js";
 import { authenticateToken } from "../controllers/jwtController.js";
 
@@ -17,6 +18,7 @@ candidateCbtRouter
   .get("/login", loginCandidate)
   .get("/instructionsummary", authenticateToken, instructionSummary)
   .get("/avatar", authenticateToken, getAvatar)
-  .get("/getquestions", authenticateToken, getQuestions);
+  .get("/getquestions", authenticateToken, getQuestions)
+  .post("/saveresponses", authenticateToken, saveResponses);
 
 export default candidateCbtRouter;

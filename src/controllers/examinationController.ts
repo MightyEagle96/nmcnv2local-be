@@ -173,6 +173,8 @@ export const viewSessionCandidates = async (req: Request, res: Response) => {
         submittedTime: 1,
         ipAddress: 1,
         loginCount: 1,
+        responseCount: 1,
+        duration: 1,
       })
       .lean();
 

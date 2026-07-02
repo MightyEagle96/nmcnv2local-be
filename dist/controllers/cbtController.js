@@ -6,7 +6,15 @@ import * as UAParser from "ua-parser-js";
 import CandidateMachineModel from "../models/candidateMachine.js";
 import QuestionBankModel from "../models/questionBankModel.js";
 import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
+import ResponseModel from "../models/responseModel.js";
 const dataQueue = new ConcurrentJobQueue({
+    concurrency: 1,
+    maxQueueSize: 100,
+    retries: 3,
+    retryDelay: 1000,
+    shutdownTimeout: 30000,
+});
+const responseQueue = new ConcurrentJobQueue({
     concurrency: 1,
     maxQueueSize: 100,
     retries: 3,
@@ -53,11 +61,19 @@ export const loginCandidate = async (req, res) => {
                 browserVersion: result.browser.version,
                 loginTime: new Date(),
             };
-            await Candidate.updateOne({ _id: candidate._id }, {
-                $set: { ipAddress, loggedIn: true },
-                $inc: { loginCount: 1 },
-                $setOnInsert: { loggedInTime: new Date() },
-            });
+            const update = {
+                $set: {
+                    ipAddress,
+                    loggedIn: true,
+                },
+                $inc: {
+                    loginCount: 1,
+                },
+            };
+            if (!candidate.loggedInTime) {
+                update.$set.loggedInTime = new Date();
+            }
+            await Candidate.updateOne({ _id: candidate._id }, update);
             await CandidateMachineModel.updateOne({
                 candidate: candidate._id,
                 cbtExamination,
@@ -206,7 +222,88 @@ export const getQuestions = async (req, res) => {
             // .populate("programme", { name: 1 })
             // .select({ questionsCount: 1, programme: 1 })
             .lean();
-        res.send(questionBanks);
+        const responses = await ResponseModel.findOne({
+            candidate: req.candidate?._id,
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        });
+        res.send({
+            questionBanks,
+            responses,
+            duration: candidate.duration,
+        });
+    }
+    catch (error) {
+        res.sendStatus(500);
+    }
+};
+export const saveResponses = async (req, res) => {
+    try {
+        const body = {
+            candidate: req.candidate?._id,
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+            responses: req.body.responses,
+            duration: req.body.duration,
+        };
+        responseQueue.enqueue(async () => {
+            const result = await ResponseModel.updateOne({
+                candidate: body.candidate,
+                cbtExamination: body.cbtExamination,
+                examSession: body.examSession,
+                $expr: {
+                    $lte: [{ $size: "$responses" }, body.responses.length],
+                },
+            }, {
+                $set: {
+                    responses: body.responses,
+                },
+            });
+            if (result.matchedCount === 0) {
+                try {
+                    const response = new ResponseModel(body);
+                    await response.save();
+                    await Candidate.updateOne({
+                        _id: body.candidate,
+                    }, {
+                        $set: {
+                            duration: body.duration,
+                            responseCount: body.responses.length,
+                        },
+                    });
+                    return;
+                }
+                catch (error) {
+                    if (error.code !== 11000) {
+                        throw new Error("Response already submitted");
+                    }
+                    //throw error;
+                }
+            }
+            const retry = await ResponseModel.updateOne({
+                candidate: body.candidate,
+                cbtExamination: body.cbtExamination,
+                examSession: body.examSession,
+                $expr: {
+                    $lte: [{ $size: "$responses" }, body.responses.length],
+                },
+            }, {
+                $set: {
+                    responses: body.responses,
+                },
+            });
+            if (result.modifiedCount > 0 || retry.modifiedCount > 0) {
+                await Candidate.updateOne({
+                    _id: body.candidate,
+                }, {
+                    $set: {
+                        duration: body.duration,
+                        responseCount: body.responses.length,
+                    },
+                });
+            }
+        });
+        res.send("Response saved");
     }
     catch (error) {
         res.sendStatus(500);
