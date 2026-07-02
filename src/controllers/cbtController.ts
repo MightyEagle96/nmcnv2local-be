@@ -41,6 +41,16 @@ export const loginCandidate = async (req: Request, res: Response) => {
     if (candidate.loggedIn) {
       return res.status(400).send("Candidate already logged in");
     }
+
+    if (candidate.loggedIn && candidate.ipAddress !== req.ip) {
+      return res
+        .status(400)
+        .send("Candidate already logged in from another ip");
+    }
+
+    if (candidate.submitted) {
+      return res.status(400).send("Candidate already submitted");
+    }
     const data = {
       name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
       indexNumber: candidate.indexNumber,
