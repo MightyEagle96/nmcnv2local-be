@@ -128,6 +128,16 @@ export const viewSessionCandidates = async (req, res) => {
     try {
         const page = (req.query.page || 1);
         const limit = (req.query.limit || 50);
+        const submitted = await Candidate.countDocuments({
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+            submitted: true,
+        });
+        const writing = await Candidate.countDocuments({
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+            loggedIn: true,
+        });
         const totalCandidates = await Candidate.countDocuments({
             cbtExamination: req.headers.cbtexamination,
             examSession: req.headers.examsession,

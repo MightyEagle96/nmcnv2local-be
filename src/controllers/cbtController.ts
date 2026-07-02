@@ -379,3 +379,111 @@ export const saveResponses = async (
     res.sendStatus(500);
   }
 };
+
+const submissionQueue = new ConcurrentJobQueue({
+  concurrency: 1,
+  maxQueueSize: 100,
+  retries: 3,
+  retryDelay: 1000,
+  shutdownTimeout: 30000,
+});
+
+export const submitExam = async (
+  req: AuthenticatedCandidate,
+  res: Response,
+) => {
+  try {
+    const body = {
+      candidate: req.candidate?._id,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+      responses: req.body.responses,
+      duration: req.body.duration,
+    };
+
+    submissionQueue.enqueue(async () => {
+      const result = await ResponseModel.updateOne(
+        {
+          candidate: body.candidate,
+          cbtExamination: body.cbtExamination,
+          examSession: body.examSession,
+          $expr: {
+            $lte: [{ $size: "$responses" }, body.responses.length],
+          },
+        },
+        {
+          $set: {
+            responses: body.responses,
+          },
+        },
+      );
+
+      if (result.matchedCount === 0) {
+        try {
+          const response = new ResponseModel(body);
+          await response.save();
+
+          await Candidate.updateOne(
+            {
+              _id: body.candidate,
+            },
+            {
+              $set: {
+                duration: body.duration,
+                responseCount: body.responses.length,
+                submitted: true,
+                submittedTime: new Date(),
+                ipAddress: "",
+                loggedIn: false,
+              },
+            },
+          );
+          return;
+        } catch (error: any) {
+          if (error.code !== 11000) {
+            throw new Error("Response already submitted");
+          }
+          //throw error;
+        }
+      }
+
+      const retry = await ResponseModel.updateOne(
+        {
+          candidate: body.candidate,
+          cbtExamination: body.cbtExamination,
+          examSession: body.examSession,
+          $expr: {
+            $lte: [{ $size: "$responses" }, body.responses.length],
+          },
+        },
+        {
+          $set: {
+            responses: body.responses,
+          },
+        },
+      );
+
+      if (result.modifiedCount > 0 || retry.modifiedCount > 0) {
+        await Candidate.updateOne(
+          {
+            _id: body.candidate,
+          },
+          {
+            $set: {
+              duration: body.duration,
+              responseCount: body.responses.length,
+              submitted: true,
+              submittedTime: new Date(),
+              ipAddress: "",
+              loggedIn: false,
+            },
+          },
+        );
+      }
+    });
+
+    res.send("Submitted");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
