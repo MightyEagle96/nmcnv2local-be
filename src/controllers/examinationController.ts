@@ -5,6 +5,7 @@ import { match } from "assert";
 import Candidate from "../models/candidateModel.js";
 import { io } from "../app.js";
 import { tokens } from "./jwtController.js";
+import InfractionModel from "../models/infractionModel.js";
 
 export const GetExaminationsWithSessions = async (
   req: Request,
@@ -168,6 +169,11 @@ export const viewSessionCandidates = async (req: Request, res: Response) => {
       examSession: req.headers.examsession,
     });
 
+    const infractions = await InfractionModel.countDocuments({
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+    });
+
     const candidates = await Candidate.find({
       cbtExamination: req.headers.cbtexamination,
       examSession: req.headers.examsession,
@@ -203,6 +209,7 @@ export const viewSessionCandidates = async (req: Request, res: Response) => {
       totalCandidates,
       writing,
       submitted,
+      infractions,
     });
   } catch (error) {
     res.status(500).send(error);

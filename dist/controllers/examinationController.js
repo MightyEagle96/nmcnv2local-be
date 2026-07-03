@@ -3,6 +3,7 @@ import ExamSessionModel from "../models/examSessionModel.js";
 import Candidate from "../models/candidateModel.js";
 import { io } from "../app.js";
 import { tokens } from "./jwtController.js";
+import InfractionModel from "../models/infractionModel.js";
 export const GetExaminationsWithSessions = async (req, res) => {
     try {
         const examinations = await CBTExamModel.aggregate([
@@ -142,6 +143,10 @@ export const viewSessionCandidates = async (req, res) => {
             cbtExamination: req.headers.cbtexamination,
             examSession: req.headers.examsession,
         });
+        const infractions = await InfractionModel.countDocuments({
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        });
         const candidates = await Candidate.find({
             cbtExamination: req.headers.cbtexamination,
             examSession: req.headers.examsession,
@@ -172,6 +177,9 @@ export const viewSessionCandidates = async (req, res) => {
         res.send({
             candidates: mappedRecords,
             totalCandidates,
+            writing,
+            submitted,
+            infractions,
         });
     }
     catch (error) {
