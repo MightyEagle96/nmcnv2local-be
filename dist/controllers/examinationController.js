@@ -114,8 +114,17 @@ export const activateSession = async (req, res) => {
         res.status(500).send(error);
     }
 };
-export const endSession = () => {
-    Swal;
+export const endSession = async (req, res) => {
+    const { _id, cbtExamination } = req.body;
+    const examination = await CBTExamModel.findOne({ _id: cbtExamination });
+    if (!examination) {
+        return res.status(400).send("Examination not found");
+    }
+    else if (!examination.active) {
+        return res.status(400).send("Examination not active");
+    }
+    await ExamSessionModel.updateOne({ _id, cbtExamination }, { $set: { status: "completed", completionTime: new Date() } });
+    res.send("Session completed");
 };
 export const activeExaminationAndSession = async (req, res) => {
     try {
