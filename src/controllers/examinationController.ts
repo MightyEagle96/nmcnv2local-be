@@ -69,8 +69,6 @@ export const GetExaminationsWithSessions = async (
       },
     ]);
 
-    console.log(examinations);
-
     res.send(examinations);
   } catch (error) {
     res.status(500).send(error);
@@ -256,6 +254,50 @@ export const getCandidate = async (req: Request, res: Response) => {
   }
 };
 
+export const getInfractionCandidate = async (req: Request, res: Response) => {
+  try {
+    console.log(req.body);
+
+    const candidate = await Candidate.findOne({
+      indexNumber: req.body.indexNumber3,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+    })
+      .lean()
+      .select({
+        avatar: 1,
+        indexNumber: 1,
+        firstName: 1,
+        middleName: 1,
+        lastName: 1,
+        submitted: 1,
+        flaggedForInfraction: 1,
+        loggedIn: 1,
+      });
+
+    if (!candidate) {
+      return res.status(400).send("Candidate not found");
+    }
+
+    if (candidate.submitted === true) {
+      return res.status(400).send("Candidate already submitted");
+    }
+
+    const infractions = await InfractionModel.find({
+      candidate: candidate._id,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+    });
+
+    res.send({
+      candidate,
+      infractions,
+    });
+  } catch (error: any) {
+    res.status(500).send(new Error(error).message);
+  }
+};
+
 export const reloginCandidate = async (req: Request, res: Response) => {
   try {
     const candidate = await Candidate.findOne({
@@ -296,7 +338,7 @@ export const testWebSocket = async (req: Request, res: Response) => {
   }
 };
 
-const webSocketController = async (candidateId: any) => {
+export const webSocketController = async (candidateId: any) => {
   io.to(`candidate:${candidateId}`).emit("test", "test");
 };
 
@@ -313,6 +355,7 @@ export const reloginAllCandidates = async (req: Request, res: Response) => {
       cbtExamination: req.headers.cbtexamination,
       examSession: req.headers.examsession,
       loggedIn: true,
+      flaggedForInfraction: false,
     }).select({ _id: 1 });
     loggedInCandidates.map(async (candidate) => {
       await Candidate.updateOne(
@@ -325,5 +368,18 @@ export const reloginAllCandidates = async (req: Request, res: Response) => {
     res.send("Candidates relogged in");
   } catch (error) {
     res.status(500).send(error);
+  }
+};
+
+export const unflagCandidate = async (req: Request, res: Response) => {
+  try {
+    await Candidate.updateOne(
+      { _id: req.body.candidate },
+      { $set: { flaggedForInfraction: false, loggedIn: false, ipAddress: "" } },
+    );
+
+    res.send("Candidate unflagged");
+  } catch (error) {
+    res.sendStatus(500);
   }
 };

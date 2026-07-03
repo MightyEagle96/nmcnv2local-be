@@ -62,7 +62,6 @@ export const GetExaminationsWithSessions = async (req, res) => {
                 },
             },
         ]);
-        console.log(examinations);
         res.send(examinations);
     }
     catch (error) {
@@ -222,6 +221,45 @@ export const getCandidate = async (req, res) => {
         res.status(500).send(error);
     }
 };
+export const getInfractionCandidate = async (req, res) => {
+    try {
+        console.log(req.body);
+        const candidate = await Candidate.findOne({
+            indexNumber: req.body.indexNumber3,
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        })
+            .lean()
+            .select({
+            avatar: 1,
+            indexNumber: 1,
+            firstName: 1,
+            middleName: 1,
+            lastName: 1,
+            submitted: 1,
+            flaggedForInfraction: 1,
+            loggedIn: 1,
+        });
+        if (!candidate) {
+            return res.status(400).send("Candidate not found");
+        }
+        if (candidate.submitted === true) {
+            return res.status(400).send("Candidate already submitted");
+        }
+        const infractions = await InfractionModel.find({
+            candidate: candidate._id,
+            cbtExamination: req.headers.cbtexamination,
+            examSession: req.headers.examsession,
+        });
+        res.send({
+            candidate,
+            infractions,
+        });
+    }
+    catch (error) {
+        res.status(500).send(new Error(error).message);
+    }
+};
 export const reloginCandidate = async (req, res) => {
     try {
         const candidate = await Candidate.findOne({
@@ -256,7 +294,7 @@ export const testWebSocket = async (req, res) => {
         console.error(error);
     }
 };
-const webSocketController = async (candidateId) => {
+export const webSocketController = async (candidateId) => {
     io.to(`candidate:${candidateId}`).emit("test", "test");
 };
 export const clearCookie = async (req, res) => {
@@ -271,6 +309,7 @@ export const reloginAllCandidates = async (req, res) => {
             cbtExamination: req.headers.cbtexamination,
             examSession: req.headers.examsession,
             loggedIn: true,
+            flaggedForInfraction: false,
         }).select({ _id: 1 });
         loggedInCandidates.map(async (candidate) => {
             await Candidate.updateOne({ _id: candidate._id }, { $set: { loggedIn: false, ipAddress: "" } });
@@ -280,6 +319,15 @@ export const reloginAllCandidates = async (req, res) => {
     }
     catch (error) {
         res.status(500).send(error);
+    }
+};
+export const unflagCandidate = async (req, res) => {
+    try {
+        await Candidate.updateOne({ _id: req.body.candidate }, { $set: { flaggedForInfraction: false, loggedIn: false, ipAddress: "" } });
+        res.send("Candidate unflagged");
+    }
+    catch (error) {
+        res.sendStatus(500);
     }
 };
 //# sourceMappingURL=examinationController.js.map

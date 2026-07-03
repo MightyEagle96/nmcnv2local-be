@@ -6,6 +6,7 @@ import {
   instructionSummary,
   loginCandidate,
   preLoginCandidate,
+  recordInfraction,
   saveResponses,
   submitExam,
 } from "../controllers/cbtController.js";
@@ -21,6 +22,7 @@ candidateCbtRouter
   .get("/avatar", authenticateToken, getAvatar)
   .get("/getquestions", authenticateToken, getQuestions)
   .post("/saveresponses", authenticateToken, saveResponses)
-  .post("/submitexam", authenticateToken, submitExam);
+  .post("/submitexam", authenticateToken, submitExam)
+  .post("/recordinfraction", authenticateToken, recordInfraction);
 
 export default candidateCbtRouter;

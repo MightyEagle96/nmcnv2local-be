@@ -5,9 +5,11 @@ import {
   clearCookie,
   getCandidate,
   GetExaminationsWithSessions,
+  getInfractionCandidate,
   reloginAllCandidates,
   reloginCandidate,
   testWebSocket,
+  unflagCandidate,
   viewSessionCandidates,
 } from "../controllers/examinationController.js";
 import { examinationMiddleware } from "../controllers/cbtController.js";
@@ -27,6 +29,8 @@ examinationRouter
   .post("/relogincandidate", examinationMiddleware, reloginCandidate)
   .post("/messagecandidate", examinationMiddleware, testWebSocket)
   .get("/reloginallcandidates", examinationMiddleware, reloginAllCandidates)
+  .post("/infractioncandidate", examinationMiddleware, getInfractionCandidate)
+  .post("/unflagcandidate", examinationMiddleware, unflagCandidate)
   .get("/clearcookie", clearCookie);
 
 export default examinationRouter;

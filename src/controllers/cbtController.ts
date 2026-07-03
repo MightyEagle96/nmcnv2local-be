@@ -8,6 +8,8 @@ import CandidateMachineModel from "../models/candidateMachine.js";
 import QuestionBankModel from "../models/questionBankModel.js";
 import QuestionBankCategoryModel from "../models/questionBankCategoryModel.js";
 import ResponseModel from "../models/responseModel.js";
+import InfractionModel from "../models/infractionModel.js";
+import { webSocketController } from "./examinationController.js";
 
 const dataQueue = new ConcurrentJobQueue({
   concurrency: 1,
@@ -38,18 +40,20 @@ export const loginCandidate = async (req: Request, res: Response) => {
       return res.status(400).send("Candidate not found");
     }
 
+    if (candidate.flaggedForInfraction) {
+      return res.status(400).send("You have been  flagged for infraction");
+    }
+
     if (candidate.loggedIn) {
-      return res.status(400).send("Candidate already logged in");
+      return res.status(400).send("You are already logged in");
     }
 
     if (candidate.loggedIn && candidate.ipAddress !== req.ip) {
-      return res
-        .status(400)
-        .send("Candidate already logged in from another ip");
+      return res.status(400).send("You are already logged in from another ip");
     }
 
     if (candidate.submitted) {
-      return res.status(400).send("Candidate already submitted");
+      return res.status(400).send("You have already submitted");
     }
     const data = {
       name: `${candidate.firstName} ${candidate.middleName} ${candidate.lastName}`,
@@ -141,21 +145,23 @@ export const preLoginCandidate = async (req: Request, res: Response) => {
     }
 
     if (candidate.examSession.toString() !== req.headers.examsession) {
-      return res.status(400).send("Candidate not meant for this session");
+      return res.status(400).send("You are not meant for this session");
+    }
+
+    if (candidate.flaggedForInfraction) {
+      return res.status(400).send("You have been flagged for infraction");
     }
 
     if (candidate.loggedIn) {
-      return res.status(400).send("Candidate already logged in");
+      return res.status(400).send("You are already logged in");
     }
 
     if (candidate.loggedIn && candidate.ipAddress !== req.ip) {
-      return res
-        .status(400)
-        .send("Candidate already logged in from another ip");
+      return res.status(400).send("You are already logged in from another ip");
     }
 
     if (candidate.submitted) {
-      return res.status(400).send("Candidate already submitted");
+      return res.status(400).send("You have already submitted");
     }
 
     res.send({
@@ -496,6 +502,53 @@ export const submitExam = async (
     });
 
     res.send("Submitted");
+  } catch (error) {
+    res.sendStatus(500);
+  }
+};
+
+const infractionQueue = new ConcurrentJobQueue({
+  concurrency: 1,
+  maxQueueSize: 100,
+  retries: 3,
+  retryDelay: 1000,
+  shutdownTimeout: 30000,
+});
+
+export const recordInfraction = async (
+  req: AuthenticatedCandidate,
+  res: Response,
+) => {
+  try {
+    const ipAddress = req.ip?.replace("::ffff:", "");
+    const body = {
+      candidate: req.candidate?._id,
+      infraction: req.body.infraction,
+      cbtExamination: req.headers.cbtexamination,
+      examSession: req.headers.examsession,
+      ipAddress,
+    };
+
+    infractionQueue.enqueue(async () => {
+      const infraction = new InfractionModel(body);
+      await infraction.save();
+
+      const infractionCount = await InfractionModel.countDocuments({
+        candidate: body.candidate,
+        cbtExamination: body.cbtExamination,
+        examSession: body.examSession,
+      });
+
+      if (infractionCount % 3 === 0) {
+        await webSocketController(body.candidate);
+        await Candidate.updateOne(
+          { _id: body.candidate },
+          { $set: { flaggedForInfraction: true } },
+        );
+      }
+    });
+
+    res.sendStatus(200);
   } catch (error) {
     res.sendStatus(500);
   }
