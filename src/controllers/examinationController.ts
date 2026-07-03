@@ -79,6 +79,42 @@ export const activateSession = async (req: Request, res: Response) => {
   try {
     const { _id, cbtExamination } = req.body;
 
+    const activeSession = await ExamSessionModel.findOne({
+      cbtExamination,
+      status: "activated",
+    });
+
+    if (activeSession) {
+      return res
+        .status(400)
+        .send(`Session ${activeSession.sessionNumber} is currently active.`);
+    }
+
+    const session = await ExamSessionModel.findById(_id);
+
+    if (!session) {
+      return res.status(404).send("Session not found");
+    }
+
+    if (session.sessionNumber > 1) {
+      const previousSession = await ExamSessionModel.findOne({
+        cbtExamination,
+        sessionNumber: session.sessionNumber - 1,
+      });
+
+      if (!previousSession) {
+        return res.status(400).send("Previous session not found.");
+      }
+
+      if (previousSession.status !== "completed") {
+        return res
+          .status(400)
+          .send(
+            `Session ${previousSession.sessionNumber} must be completed before activating Session ${session.sessionNumber}.`,
+          );
+      }
+    }
+
     const examination = await CBTExamModel.findOne({ _id: cbtExamination });
 
     if (!examination) {
@@ -89,7 +125,7 @@ export const activateSession = async (req: Request, res: Response) => {
 
     await ExamSessionModel.updateOne(
       { _id, cbtExamination },
-      { $set: { status: "activated" } },
+      { $set: { status: "activated", activationTime: new Date() } },
     );
 
     await Candidate.updateMany(
@@ -102,6 +138,10 @@ export const activateSession = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).send(error);
   }
+};
+
+export const endSession = () => {
+  Swal;
 };
 export const activeExaminationAndSession = async (
   req: Request,

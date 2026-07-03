@@ -3,6 +3,7 @@ import {
   activateSession,
   activeExaminationAndSession,
   clearCookie,
+  endSession,
   getCandidate,
   GetExaminationsWithSessions,
   getInfractionCandidate,
@@ -31,6 +32,7 @@ examinationRouter
   .get("/reloginallcandidates", examinationMiddleware, reloginAllCandidates)
   .post("/infractioncandidate", examinationMiddleware, getInfractionCandidate)
   .post("/unflagcandidate", examinationMiddleware, unflagCandidate)
+  .patch("/endsession", examinationMiddleware, endSession)
   .get("/clearcookie", clearCookie);
 
 export default examinationRouter;

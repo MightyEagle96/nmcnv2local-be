@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { activateSession, activeExaminationAndSession, clearCookie, getCandidate, GetExaminationsWithSessions, getInfractionCandidate, reloginAllCandidates, reloginCandidate, testWebSocket, unflagCandidate, viewSessionCandidates, } from "../controllers/examinationController.js";
+import { activateSession, activeExaminationAndSession, clearCookie, endSession, getCandidate, GetExaminationsWithSessions, getInfractionCandidate, reloginAllCandidates, reloginCandidate, testWebSocket, unflagCandidate, viewSessionCandidates, } from "../controllers/examinationController.js";
 import { examinationMiddleware } from "../controllers/cbtController.js";
 const examinationRouter = Router();
 examinationRouter
@@ -13,6 +13,7 @@ examinationRouter
     .get("/reloginallcandidates", examinationMiddleware, reloginAllCandidates)
     .post("/infractioncandidate", examinationMiddleware, getInfractionCandidate)
     .post("/unflagcandidate", examinationMiddleware, unflagCandidate)
+    .patch("/endsession", examinationMiddleware, endSession)
     .get("/clearcookie", clearCookie);
 export default examinationRouter;
 //# sourceMappingURL=examinationRouter.js.map
